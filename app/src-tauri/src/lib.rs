@@ -352,7 +352,7 @@ pub fn run() {
             reveal_path
         ])
         .build(tauri::generate_context!())
-        .expect("error while building MeshToCad");
+        .expect("error while building PyCadSR");
     app.run(|handle, event| {
         if let RunEvent::Exit = event {
             stop_backend(&handle.state::<AppState>());

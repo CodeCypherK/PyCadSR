@@ -1,8 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MeshToCad",
+  "productName": "PyCadSR",
+  "mainBinaryName": "PyCadSR",
   "version": "0.1.0",
-  "identifier": "com.meshtocad.app",
+  "identifier": "com.pycadsr.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "MeshToCad",
+        "title": "PyCadSR",
         "width": 1600,
         "height": 1000,
         "minWidth": 1100,
@@ -27,6 +28,12 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "publisher": "CodeCypherK",
+    "copyright": "Copyright (c) 2026 CodeCypherK",
+    "license": "MIT",
+    "homepage": "https://github.com/CodeCypherK/PyCadSR",
+    "shortDescription": "Turn triangle meshes back into CAD",
+    "longDescription": "PyCadSR reads a triangle mesh (STL, OBJ, PLY, OFF, GLB/GLTF, FBX) and rebuilds it as a CAD model: exact planes, cylinders, cones, spheres and tori, equations found by symbolic regression (PySR), and clean B-spline faces for freeform shapes. It exports STEP.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

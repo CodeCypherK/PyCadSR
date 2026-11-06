@@ -1315,8 +1315,8 @@ class Step:
         now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         head = [
             "ISO-10303-21;", "HEADER;",
-            "FILE_DESCRIPTION(('MeshToCad surface reconstruction'),'2;1');",
-            f"FILE_NAME('{name}.step','{now}',('MeshToCad'),(''),'MeshToCad','MeshToCad','');",
+            "FILE_DESCRIPTION(('PyCadSR surface reconstruction'),'2;1');",
+            f"FILE_NAME('{name}.step','{now}',('PyCadSR'),(''),'PyCadSR','PyCadSR','');",
             "FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));", "ENDSEC;", "DATA;",
         ]
         body = [f"#{i + 1}={t};" for i, t in enumerate(self.lines)]

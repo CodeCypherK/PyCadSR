@@ -1,7 +1,7 @@
 [package]
 name = "meshtocad"
 version = "0.1.0"
-description = "Mesh to CAD via symbolic regression"
+description = "PyCadSR: triangle meshes back into CAD, with symbolic regression"
 edition = "2021"
 
 [lib]
