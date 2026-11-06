@@ -1,0 +1,13 @@
+runtime/
+.cache/
+__pycache__/
+*.pyc
+app/node_modules/
+app/dist/
+app/public/demo/
+app/src-tauri/target/
+app/src-tauri/gen/
+# exported models and renders (may hold other people's parts)
+outputs/
+# personal Claude Code tool settings
+.claude/

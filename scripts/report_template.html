@@ -1,0 +1,265 @@
+<title>MeshToCad Surface Benchmark</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column of an engineering test report; figures, then evidence, then the full tables. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --fg: #17202b; --muted: #5a6573; --line: #dfe3e8;
+  --accent: #2f6db5; --up: #1f7a4d; --down: #b4472f;
+  --b0: #dbe5f2; --b1: #a6c0e2; --b2: #5f8fcb; --b3: #2f6db5;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --panel: #182029; --fg: #e4e9ef; --muted: #98a3b1; --line: #2a3542;
+  --accent: #6fa3e6; --up: #5cc392; --down: #ee8a70; --b0: #263547; --b1: #34557f; --b2: #4c7fc0; --b3: #7fb0ee; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --panel: #182029; --fg: #e4e9ef; --muted: #98a3b1; --line: #2a3542;
+  --accent: #6fa3e6; --up: #5cc392; --down: #ee8a70; --b0: #263547; --b1: #34557f; --b2: #4c7fc0; --b3: #7fb0ee; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 40px; }
+header { display: flex; flex-direction: column; gap: 8px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 24px; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.tile .k { font-size: 13px; color: var(--muted); }
+.tile .v { font-family: var(--font-data); font-size: 30px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tile .d { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+figure.mini { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 14px 6px; min-width: 0; }
+figure.mini figcaption { font-weight: 600; font-size: 14px; }
+figure.mini .unit { font-weight: 400; color: var(--muted); font-size: 12px; }
+svg .lab { fill: var(--muted); font-size: 12px; font-family: var(--font-body); }
+svg .val { fill: var(--fg); font-size: 12px; font-family: var(--font-data); }
+svg .axis { stroke: var(--line); stroke-width: 1; }
+svg .b0 { fill: var(--b0); } svg .b1 { fill: var(--b1); } svg .b2 { fill: var(--b2); } svg .b3 { fill: var(--b3); }
+ul.changes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 75ch; }
+ul.changes b { font-weight: 600; }
+figure.shot { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+figure.shot img { width: 100%; border-radius: 6px; border: 1px solid var(--line); background: #18181b; }
+figure.shot figcaption { color: var(--muted); font-size: 14px; max-width: 75ch; }
+.tablebox { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { position: sticky; top: 0; background: var(--panel); font-weight: 600; color: var(--muted); font-size: 12px; }
+td.name, th.name { text-align: left; white-space: normal; min-width: 180px; }
+td { font-family: var(--font-data); } td.name { font-family: var(--font-body); }
+td.up { color: var(--up); font-weight: 500; } td.down { color: var(--down); font-weight: 500; }
+.filter { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filter input { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); min-width: 0; width: min(320px, 100%); }
+.filter input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.note { font-size: 13px; color: var(--muted); }
+.gaps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.gap { border-left: 3px solid var(--down); padding: 4px 0 4px 12px; display: flex; flex-direction: column; gap: 4px; }
+.gap p { font-size: 14px; color: var(--muted); }
+.set { display: inline-block; margin-left: 8px; font-size: 11px; color: var(--muted); font-family: var(--font-data); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">MeshToCad · test report · 28 Oct 2026</div>
+    <h1>MeshToCad Surface Benchmark</h1>
+    <p class="lede">Real CAD assemblies were turned into meshes, then MeshToCad recovered their surfaces from the mesh vertices and wrote STEP again. Each result is scored against the original CAD faces and checked by opening the STEP in OpenCASCADE.</p>
+  </header>
+
+  <section>
+    <h2>Round 6: the STEP writer, on all {{R6_MODELS}} models</h2>
+    <p>Round 6 keeps round 5's segmentation and changes only how the STEP file is written. Every saved round-5 session was exported again and opened in OpenCASCADE, the kernel FreeCAD uses. Small figures show round 5 on the same models.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R6_FAILED}}</span><span class="d">round 5: {{R6_FAILED5}} · of {{R6_FACES}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R6_MISSING}}</span><span class="d">round 5: {{R6_MISSING5}} · mean per model</span></div>
+      <div class="tile"><span class="k">STEP solids</span><span class="v">{{R6_SOLIDS}}</span><span class="d">round 5: {{R6_SOLIDS5}}</span></div>
+      <div class="tile"><span class="k">Models better · worse</span><span class="v">{{R6_BETTER}} · {{R6_WORSE}}</span><span class="d">the rest held</span></div>
+    </div>
+    <ul class="changes">
+      <li><b>Corners land on all their surfaces.</b> Edge and corner points used to be projected onto each surface in turn along that surface's own height direction. Off a steep cone that overshoots many times, and on the respirator a corner where a nearly flat cone, a sphere and a plane meet drifted 39 mm away. Points are now solved against all the surfaces' tangent planes at once, tied to the mesh corner, which on a CAD mesh is the true corner.</li>
+      <li><b>One seam for a stack of turned bands.</b> Bands stacked on one axis share their circles, but each band put its seam at its own angle, so a seam could twist a quarter turn across a band and the face was dropped (the bottle's neck band). Bands in a stack now share one seam.</li>
+      <li><b>Sphere rings written the way CAD systems write them.</b> A sphere face that goes all the way round (the drawing pin's dome) now takes its circle's axis as the sphere's axis and gets its own seam. Before, OpenCASCADE added the seam itself, gave one vertex a 0.4 mm tolerance, and meshed the dome with 3.6 mm triangles.</li>
+      <li><b>Torus seams take the short way round.</b> A rim torus's seam was decided from another region's points and could go the long way round the tube, folding the face over.</li>
+      <li><b>No runaway spline patches.</b> A tiny freeform strip fitted with a steep parabola gave a B-spline patch reaching metres away on a 75 mm part, which crashed the checker. Patch values now stay near the data.</li>
+    </ul>
+    <figure class="shot"><img src="{{IMG_PIN6}}" alt="Drawing pin dome underside meshed by OpenCASCADE: coarse red triangles in round 5, fine and on the source in round 6">
+      <figcaption>Small drawing pin, as OpenCASCADE meshes our STEP. Its dome went from 20% "missing" to none: the sphere was always right, the face around it was not.</figcaption></figure>
+    <figure class="shot"><img src="{{IMG_BOTTLE6}}" alt="Beer bottle neck: a gap where a band face is missing in round 5, the band present in round 6">
+      <figcaption>Beer bottle neck: the band under the lip was dropped in round 5 because its seam twisted a quarter turn; round 6 writes it, and the bottle has no failing faces left.</figcaption></figure>
+    <div class="tablebox"><table id="t-r6">
+      <thead><tr><th class="name">Model, round 5 → round 6 (models that moved, best first)</th><th>STEP faces</th><th>STEP failing</th><th>Missing</th><th>Solids</th></tr></thead>
+      <tbody>{{ROWS6}}</tbody></table></div>
+    <p class="note">Missing area counts the faces OpenCASCADE rejects as missing, so one large rejected face moves it a lot. A model counts as better or worse when its failing faces plus twice its missing percentage moved by more than 0.5. The inline-4 engine is not in these figures because its round-5 accuracy check failed inside the checker; in round 6 the check completes: 31 of 31 solids, 22 failing faces (round 5: 89), 0.53% missing.</p>
+  </section>
+
+  <section>
+    <h2>Round 11: thin faces, wandering edges and the big assemblies</h2>
+    <p>The faces still failing were mostly in the big assemblies: thin strips between surfaces that fit their vertices imprecisely, edges pulled sideways across thin necks of a face, and freeform patches seen nearly edge-on. Same {{R11_MODELS}} models; small figures show round 10.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R11_FAILED}}</span><span class="d">round 10: {{R11_FAILED10}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R11_MISSING}}</span><span class="d">round 10: {{R11_MISSING10}} · mean per model</span></div>
+      <div class="tile"><span class="k">Valid solids</span><span class="v">{{R11_SOLIDS}}</span><span class="d">round 10: {{R11_SOLIDS10}}</span></div>
+      <div class="tile"><span class="k">Surface type right</span><span class="v">{{R11_TYPE}}</span><span class="d">round 10: {{R11_TYPE10}} · face-weighted</span></div>
+    </div>
+    <figure class="shot"><img src="{{IMG_ENC11}}" alt="DC motor encoder coloured by distance to the source: round 10 with many faces off, round 11 with far fewer">
+      <figcaption>DC motor encoder, coloured where the STEP is more than 0.2% of the part size off the source. The spike left is one face that is still invalid.</figcaption></figure>
+    <ul class="note">
+      <li><b>Edges kept off thin necks.</b> Where a plane meets a surface that fits its vertices a little off, at a shallow angle, their intersection runs sideways of the true edge by several times the misfit, and across a thin neck of a face it crossed the loop over itself. A boundary point now moves onto its surfaces by less than half the gap to the face's other boundary (a tenth of the tolerance always goes through): the mesh boundary of a CAD export is on the true edge already.</li>
+      <li><b>Edges of thin faces.</b> Each edge was thinned to half the tolerance, and the two long edges of a strip narrower than that crossed. Edges are now thinned to a quarter of the width of the faces they bound.</li>
+      <li><b>Edge-on freeform patches.</b> A freeform region whose facets turn more than 65° (was 80°) from its mean is split into pieces each one patch can hold, except long strips meshed with a handful of triangles across, where the seams between pieces failed instead.</li>
+      <li><b>Threads, checked harder.</b> A thread flank fits its helix to float precision on an exact mesh; straight extrusions (a helix of enormous lead), strips far from any axis and wavy near-cylinders no longer pass as threads. Threads are found while segmenting, so the region list shows them, marked exact.</li>
+    </ul>
+    <p class="note">{{R11_BETTER}} models got better and {{R11_WORSE}} worse (round-6 rule). Biggest gains: {{R11_TOP}}. Worse: {{R11_WORST}}. Tried and left out: folding faces narrower than the tolerance into a neighbour (it removed hundreds of valid narrow fillets), a smooth cubic fill in the data splines (it overshot at creases), and a lower floor on the declared precision (no effect).</p>
+  </section>
+
+  <section>
+    <h2>Round 10: threads, flat cuts and the faces that still failed</h2>
+    <p>A survey of every face still failing showed one main failure: a face whose boundary crosses itself on its own surface. It had several causes, each fixed generally. Same {{R10_MODELS}} models, segmented again from scratch; small figures show round 9.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R10_FAILED}}</span><span class="d">round 9: {{R10_FAILED9}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R10_MISSING}}</span><span class="d">round 9: {{R10_MISSING9}} · mean per model</span></div>
+      <div class="tile"><span class="k">Valid solids</span><span class="v">{{R10_SOLIDS}}</span><span class="d">round 9: {{R10_SOLIDS9}}</span></div>
+      <div class="tile"><span class="k">Faces where FreeCAD's quick area is off by over 1%</span><span class="v">{{R10_QUICK}}</span><span class="d">round 9: {{R10_QUICK9}}</span></div>
+      <div class="tile"><span class="k">Edges written as exact circles</span><span class="v">{{R10_CIRCLES}}</span><span class="d">round 9: {{R10_CIRCLES9}}</span></div>
+      <div class="tile"><span class="k">Surface type right</span><span class="v">{{R10_TYPE}}</span><span class="d">round 9: {{R10_TYPE9}} · face-weighted</span></div>
+    </div>
+    <figure class="shot"><img src="{{IMG_T8}}" alt="T8 anti-backlash nut: round 9 with a broken internal thread, round 10 with exact helical thread flanks">
+      <figcaption>T8 anti-backlash nut: the internal thread's flanks are now exact helical sweeps.</figcaption></figure>
+    <ul class="note">
+      <li><b>Threads.</b> A thread flank is a profile swept along a helix. Over several turns no height-field patch can hold it, so every flank failed. Axis, lead and profile are now fitted to the flank's vertices (the T8 nut's lead comes out at exactly 8.000 mm, the M6 nut's pitch at 1.000 mm, profiles exact to under a nanometre) and written as a B-spline sampled from that sweep.</li>
+      <li><b>Flat cuts on curved faces.</b> A flat cut across a cylinder (the round rocker switches' notches) is meshed as big triangles whose corners all lie on the cylinder, so they were taken for part of it. Triangles that span far more of the surface than its own strips, and sag far below it, are now split off; flat ones become planes.</li>
+      <li><b>Caps with holes.</b> A cone or dome face that covers its apex, with holes cut through it (the water tank's slotted roof), or a dome on a spindle torus (the engine's piston crowns), now gets our own seam from rim to apex instead of a repair by the reader that failed.</li>
+      <li><b>Tolerance.</b> The vertex tolerance comes from a noise estimate, which coarse meshes of curved faces inflate; it now never exceeds what the exact surfaces actually achieve (the PVC tee's edges had been approximated 0.3 mm off and lost 8% of its area).</li>
+      <li><b>Freeform splines.</b> The data-fitted B-spline's grid was sized by point count and could miss its own vertices by 0.5 mm on a curved blend. It is now refined until it follows them within tolerance, and kept coarse when it cannot. A freeform region nobody searched takes it whenever it beats the quadratic stand-in.</li>
+      <li><b>A torus that is no function.</b> Over the top of its tube a torus's frame formula holds only half of it; its fit error is now measured as true distance, so a shared axis cannot be forced on it.</li>
+    </ul>
+    <p class="note">{{R10_BETTER}} models got better and {{R10_WORSE}} worse (round-6 rule). Biggest gains: {{R10_TOP}}. Worse: {{R10_WORST}}.</p>
+  </section>
+
+  <section>
+    <h2>Round 9: one axis for coaxial turned faces</h2>
+    <p>Turned faces that touch and are coaxial in the model (a bottle's neck, shoulder and base; a resistor's body and end caps) are now fitted round one axis, found from all their mesh vertices at once (each face weighted by how closely it fits on its own), instead of each round its own. A face keeps the shared axis only while it still fits its own vertices (within twice its own error, or 5% of the tolerance). Where two of them meet all the way round, the edge goes onto one exact circle. Same {{R9_MODELS}} models; small figures show round 8.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">Faces on a shared axis</span><span class="v">{{R9_SHARED}}</span><span class="d">round 8: none</span></div>
+      <div class="tile"><span class="k">Junctions put on one exact circle</span><span class="v">{{R9_RINGS}}</span><span class="d">round 8: none</span></div>
+      <div class="tile"><span class="k">Edges written as exact circles</span><span class="v">{{R9_CIRCLES}}</span><span class="d">round 8: {{R9_CIRCLES8}}</span></div>
+      <div class="tile"><span class="k">Faces where FreeCAD's quick area is off by over 1%</span><span class="v">{{R9_QUICK}}</span><span class="d">round 8: {{R9_QUICK8}}</span></div>
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R9_FAILED}}</span><span class="d">round 8: {{R9_FAILED8}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R9_MISSING}}</span><span class="d">round 8: {{R9_MISSING8}} · mean per model</span></div>
+    </div>
+    <figure class="shot"><img src="{{IMG_BOTTLE9}}" alt="Beer bottle: round 8 with 36 circle edges, round 9 with shared axes and 98 circle edges">
+      <figcaption>Beer bottle: exact circles in orange, the cone's straight seam in teal. With one axis for the neck, shoulder and base, their junctions become circles.</figcaption></figure>
+    <p class="note">Why the circles needed more than the axis: each face fitted on its own had an axis a hair off its neighbours' (0.001° to 1.4° on the bottle), so two of them crossed in a slightly wavy curve. And where two faces meet smoothly (a fillet running into a wall), the mesh boundary wanders across the join, by up to 0.6 mm on the bottle, so projecting each point onto both surfaces kept the wander. Each such loop now goes onto one circle at its median height and radius. That happens only if the circle lies on both faces and the move stays well clear of their other edges. The points are spaced evenly round the circle: the wandering boundary zigzags, and an edge stepping back and forth along a circle made OpenCASCADE mesh the resistor's body with coarse triangles. Two cone bands on one axis can now both have our seam, meeting where their straight seams cross. {{R9_BETTER}} models got better and {{R9_WORSE}} worse (round-6 rule): {{R9_MOVED}}.</p>
+  </section>
+
+  <section>
+    <h2>Round 8: our own seams on cone bands</h2>
+    <p>A cone band that goes all the way round now gets its seam from us, as a straight line through the cone's apex with both ends exactly on the cone, instead of OpenCASCADE adding it on reading. Its circles can then be exact too. Same {{R8_MODELS}} models; small figures show round 7.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">Cone seams written</span><span class="v">{{R8_SEAMS}}</span><span class="d">round 7: none</span></div>
+      <div class="tile"><span class="k">Edges written as exact circles</span><span class="v">{{R8_CIRCLES}}</span><span class="d">round 7: {{R8_CIRCLES7}}</span></div>
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R8_FAILED}}</span><span class="d">round 7: {{R8_FAILED7}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R8_MISSING}}</span><span class="d">round 7: {{R8_MISSING7}} · mean per model</span></div>
+    </div>
+    <figure class="shot"><img src="{{IMG_BOTTLE8}}" alt="Beer bottle: round 7 with reader-added cone seams, round 8 with our own straight cone seams and more exact circles">
+      <figcaption>Beer bottle in OpenCASCADE. The neck and shoulder cones now carry our straight seam (teal), and their rims became exact circles (orange).</figcaption></figure>
+    <p class="note">Why it took this: a seam written as its own curve is projected onto the cone by OpenCASCADE, and the projection wobbled across the cone's u = 0 line by a few nanometres, enough for OpenCASCADE's mesher to give up on the face. On the cone as written, not the fitted equation (they differ slightly), the seam is a straight line and projects exactly. Cones whose written surface misses their own circles keep the reader's seam, and so does the second of two cone bands meeting at a circle: two fitted cones are never exactly coaxial, and a seam off its cone by even a millionth of a radian (the resistor's end caps) made the face fail again. {{R8_BETTER}} models got better and {{R8_WORSE}} worse (round-6 rule): {{R8_MOVED}}.</p>
+    <p class="note">FreeCAD's quick area figure is right on the cone bands now, but still off on the bottle's turned faces next to them: those are surfaces of revolution, and where two of them meet our fitted surfaces cross in a slightly wavy curve (0.6 mm out of plane on the bottle) rather than a clean circle. Writing those seams as the profile curve itself (tried: no failures, no change in the checks) cannot help until the fits there improve.</p>
+  </section>
+
+  <section>
+    <h2>Round 7: circles written as circles</h2>
+    <p>Round 7 keeps round 6 and writes circular edges (hole rims, arc ends) as exact STEP circles instead of fine polylines, as CAD systems write them, so CAD tools can measure them and build on them. Same {{R7_MODELS}} models, checked again in OpenCASCADE; small figures show round 6.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">Edges written as exact circles</span><span class="v">{{R7_CIRCLES}}</span><span class="d">on {{R7_WITHCIRC}} models · round 6: none</span></div>
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{R7_FAILED}}</span><span class="d">round 6: {{R7_FAILED6}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{R7_MISSING}}</span><span class="d">round 6: {{R7_MISSING6}} · mean per model</span></div>
+      <div class="tile"><span class="k">STEP file size</span><span class="v">{{R7_SIZE}}</span><span class="d">all models together, against round 6</span></div>
+    </div>
+    <figure class="shot"><img src="{{IMG_FLANGE7}}" alt="DN15 flange: no circle edges in round 6; bolt holes and rims drawn as exact circles in round 7">
+      <figcaption>DN15 flange opened in OpenCASCADE. Orange edges are exact circles in the STEP. The bore and boss stay polylines: they border faces where exact circles still go wrong (below).</figcaption></figure>
+    <div class="tablebox"><table id="t-r7">
+      <thead><tr><th class="name">Model, round 6 → round 7 (models that moved, best first)</th><th>Circle edges</th><th>STEP failing</th><th>Missing</th></tr></thead>
+      <tbody>{{ROWS7}}</tbody></table></div>
+    <p class="note">{{R7_BETTER}} models got better and {{R7_WORSE}} worse by the round-6 rule (failing faces plus twice the missing percentage moved by more than 0.5). Circles stay polylines in three cases. Along a turned face that goes all the way round, unless it is a cylinder or a sphere carrying our own seam: on cone bands (whose seam OpenCASCADE adds itself) and on surfaces of revolution, exact circles made OpenCASCADE place the edge one turn off and patch the gap with a fake edge. Where two loops of a face touch (a round hole tangent to a cutout on the power supply's board): the exact circle crossed the other loop and the whole board face was rejected. And where an edge has under 6 points: four mesh corners also fit a circle that dips far between them. So the quick area figure FreeCAD shows is still off on faces next to cone bands; fixing that needs our own seams on cone bands, which still break OpenCASCADE's mesher.</p>
+  </section>
+
+  <section>
+    <h2>Round 5 on all {{A_MODELS}} models</h2>
+    <p>Every prepared model: the 84-model main set (FreeCAD library models plus the engine, inline-4, lamp, robot arm and Voron toolhead assemblies) and the 120 expanded FreeCAD-library models, {{A_TRUE}} true CAD faces in all. Small figures show round 4 on the same models.</p>
+    <div class="tiles">
+      <div class="tile"><span class="k">Surface type right</span><span class="v">{{A_TYPE}}</span><span class="d">round 4: {{A_TYPE4}}</span></div>
+      <div class="tile"><span class="k">Surfaces found</span><span class="v">{{A_SURF}}</span><span class="d">round 4: {{A_SURF4}} · true faces {{A_TRUE}}</span></div>
+      <div class="tile"><span class="k">STEP faces failing to build</span><span class="v">{{A_FAILED}}</span><span class="d">round 4: {{A_FAILED4}} · of {{A_FACES}}</span></div>
+      <div class="tile"><span class="k">Area missing in the STEP</span><span class="v">{{A_MISSING}}</span><span class="d">round 4: {{A_MISSING4}} · mean per model</span></div>
+      <div class="tile"><span class="k">STEP solids closed</span><span class="v">{{A_SOLIDS}}</span><span class="d">round 4: {{A_SOLIDS4}}</span></div>
+    </div>
+    <p class="note">STEP figures count the {{A_NBOTH}} models with a STEP check in both rounds (the inline-4 engine's accuracy step fails inside the checker's own remeshing, as in round 4; its first lines show 31 of 31 solids and 89 failing faces, the same as round 4). {{A_BETTER}} models got better, {{A_WORSE}} slightly worse, the rest held. Crashes: {{A_ERRORS}}.</p>
+  </section>
+
+  <section>
+    <h2>Main set since round 1</h2>
+    <p>The {{M_MODELS}} main-set models over the rounds. Round 1 used an earlier scorer on the 79 library models only, so read it as a rough baseline. The STEP charts count the {{M_NBOTH}} models checked in rounds 3 to 6; round 6 changed only the STEP writer.</p>
+    <div class="minis">{{CHARTS}}</div>
+  </section>
+
+  <section>
+    <h2>What changed in round 5</h2>
+    <ul class="changes">
+      <li><b>Pipe bends are one torus.</b> A bend tessellated in thin slices used to come out as a stack of cylinder bands, each fitting within tolerance. Chains of slices are now fitted as a whole, and an exact surface takes in every neighbour whose vertices lie on it to float precision, spreading along the bend.</li>
+      <li><b>Pipe-elbow STEP export.</b> A torus face that goes all the way round its tube is written as a TOROIDAL_SURFACE, with its seam along the pipe instead of round the bend axis, as CAD systems write it. That bug made almost every face of a bent pipe fail to build.</li>
+      <li><b>Coil springs are one surface.</b> A spring is a circle swept along a helix. Its vertices now give the wire radius and centreline (to 1.6 µm here), and the spring is written as one closed B-spline face instead of a hundred patches.</li>
+      <li><b>Needle triangles no longer become faces.</b> Triangles thinner than the vertex tolerance have no meaningful normal, so every edge around one looked sharp and it came out as its own one-triangle plane (about 1,000 of them on the battery holder). They now join the surface they lie on.</li>
+      <li><b>Approximate primitives are refit exactly</b> when one exact surface explains all their vertices (a torus found from a few slices, slightly off).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Before and after</h2>
+    <figure class="shot"><img src="{{IMG_BEND}}" alt="Pipe bend reducer: source faces, round 4 as cylinder slices, round 5 as one torus per bend">
+      <figcaption>Pipe bend reducer. Round 4 cut each bend into hundreds of cylinder slices (orange); round 5 finds each bend's exact torus, 16 surfaces for 16 true faces. The other two pipe bends went from 90–98% of STEP faces failing to none.</figcaption></figure>
+    <figure class="shot"><img src="{{IMG_SPRING}}" alt="Battery holder coil spring: source, round 4 in many patches, round 5 as one tube surface">
+      <figcaption>Battery holder coil spring: about a hundred torus, cylinder and spline patches in round 4, one swept tube surface in round 5.</figcaption></figure>
+    <figure class="shot"><img src="{{IMG_PIN}}" alt="Drawing pin: source faces, round 4 with the rim in cylinder slices, round 5 with one torus rim">
+      <figcaption>Drawing pin with cover: round 4 cut the rounded rim into cylinder slices (148 surfaces); round 5 finds the rim's exact torus, giving 14 surfaces with every face's type right.</figcaption></figure>
+    <figure class="shot"><img src="{{IMG_APP}}" alt="MeshToCad app showing the pipe bend reducer segmented">
+      <figcaption>The app with the round 5 code: the pipe bend reducer segmented into its exact surfaces, ready to export.</figcaption></figure>
+  </section>
+
+  <section>
+    <h2>Every model, round 4 → round 5</h2>
+    <div class="filter"><label for="q-main">Find a model</label><input id="q-main" type="search" placeholder="bend, spring, engine, screw…" data-table="t-main"></div>
+    <div class="tablebox"><table id="t-main">
+      <thead><tr><th class="name">Model (biggest gain first)</th><th>True faces</th><th>Surfaces</th><th>Type right</th><th>STEP failing</th><th>Missing</th><th>Solids</th></tr></thead>
+      <tbody>{{ROWS}}</tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Still open</h2>
+    <div class="gaps">
+      <div class="gap"><h3>Turned spline profiles</h3><p>The bottle's shoulder and base (surfaces of revolution with spline profiles) still come out as stacked torus and cone bands.</p></div>
+      <div class="gap"><h3>Rounded strips along edges</h3><p>A small round along a long edge, meshed with one or two triangles across (the drawers' fronts), turns corners in one freeform region that no single patch can follow; its faces still fail, and splitting it moves the failure to the seams.</p></div>
+      <div class="gap"><h3>File size</h3><p>Data-fitted freeform patches now follow their vertices closely, and the STEP surface sampled from them can take thousands of poles: the benchmark's STEP files total about 350 MB against 190 MB in round 9.</p></div>
+      <div class="gap"><h3>STEP topology on big assemblies</h3><p>Fewer failures after round 6, but some toolhead, robot-arm and encoder parts stay invalid, mostly faces whose loop crosses itself where a freeform patch fits poorly. {{R6_WORST_NOTE}}</p></div>
+      <div class="gap"><h3>Partial tubes</h3><p>Rolling-ball fillets along curved edges are tubes too, but only part of the way round; they still export as spline patches.</p></div>
+      <div class="gap"><h3>Smooth joins shared by several faces</h3><p>A junction loop that runs past several faces and wanders a long way across a smooth join (the bottle's neck ring, 2.7 mm) is left as it was: moving it onto its circle would come too close to the edges meeting it. FreeCAD's quick area figure stays off on those faces.</p></div>
+      <div class="gap"><h3>Cones that are not quite cones</h3><p>Some respirator regions are classified as cones although their fitted equation differs from the cone by up to 0.7 mm; the STEP writes the cone, so edges there carry large tolerances.</p></div>
+    </div>
+  </section>
+</div>
+
+<script>
+document.querySelectorAll("input[data-table]").forEach((inp) => {
+  const rows = [...document.getElementById(inp.dataset.table).tBodies[0].rows];
+  inp.addEventListener("input", () => {
+    const q = inp.value.trim().toLowerCase();
+    rows.forEach((r) => { r.hidden = q !== "" && !r.cells[0].textContent.toLowerCase().includes(q); });
+  });
+});
+</script>

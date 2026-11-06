@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeshToCad</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 16.5 12 21l8-4.5v-9L12 3 4 7.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 7.5 12 12l8-4.5M12 12v9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity=".55"/></svg>
+          <span>MeshToCad</span>
+        </div>
+        <div class="file" id="file-name">No mesh loaded</div>
+        <div class="spacer"></div>
+        <button class="engine" id="engine-pill" title="Symbolic regression engine (Julia + PySR)">
+          <span class="dot"></span><span id="engine-text">Starting engine…</span>
+        </button>
+      </header>
+
+      <aside class="left panel" id="pipeline">
+        <section class="step" data-step="mesh">
+          <header><span class="num">1</span><h2>Mesh</h2><span class="tick" aria-hidden="true"></span></header>
+          <div class="body">
+            <button id="btn-open" class="btn primary wide">Open mesh…</button>
+            <p class="hint">STL, OBJ, PLY, OFF, GLB/GLTF, FBX. You can also drop a file on the window.</p>
+            <dl id="mesh-stats" class="stats"></dl>
+          </div>
+        </section>
+
+        <section class="step" data-step="cloud">
+          <header><span class="num">2</span><h2>Points</h2><span class="tick" aria-hidden="true"></span></header>
+          <div class="body">
+            <p class="hint" id="pts-info">The mesh's own vertices are the points: no sampling needed.</p>
+          </div>
+        </section>
+
+        <section class="step" data-step="regions">
+          <header><span class="num">3</span><h2>Surface regions</h2><span class="tick" aria-hidden="true"></span></header>
+          <div class="body">
+            <label class="field inline">
+              <span>Strategy</span>
+              <select id="in-strategy" title="A CAD export is segmented on its triangles (exact faces); a scan or sculpted mesh through its vertices">
+                <option value="auto" selected>auto</option>
+                <option value="cad">CAD mesh (triangles)</option>
+                <option value="points">scan / sculpted (vertices)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Sharp-edge angle</span><output id="out-angle"></output>
+              <input type="range" id="in-angle" min="5" max="60" step="1" value="30" />
+            </label>
+            <label class="field">
+              <span>Fit tolerance (% of size)</span><output id="out-tol"></output>
+              <input type="range" id="in-tol" min="0" max="2" step="0.05" value="0" title="0 = estimate from mesh noise and facet size" />
+            </label>
+            <label class="field">
+              <span>Normal deviation</span><output id="out-ndev"></output>
+              <input type="range" id="in-ndev" min="5" max="45" step="1" value="20" />
+            </label>
+            <label class="field">
+              <span>Smallest region (% of points)</span><output id="out-minfrac"></output>
+              <input type="range" id="in-minfrac" min="0.05" max="5" step="0.05" value="0.15" />
+            </label>
+            <div class="chips" id="prim-kinds">
+              <label class="chip"><input type="checkbox" value="plane" checked /><span>plane</span></label>
+              <label class="chip"><input type="checkbox" value="cylinder" checked /><span>cylinder</span></label>
+              <label class="chip"><input type="checkbox" value="cone" checked /><span>cone</span></label>
+              <label class="chip"><input type="checkbox" value="sphere" checked /><span>sphere</span></label>
+              <label class="chip"><input type="checkbox" value="torus" checked /><span>torus</span></label>
+            </div>
+            <button id="btn-segment" class="btn wide">Identify surface regions</button>
+            <ol class="levels" id="levels" hidden></ol>
+          </div>
+        </section>
+
+        <section class="step" data-step="discover">
+          <header><span class="num">4</span><h2>Discover equations</h2><span class="tick" aria-hidden="true"></span></header>
+          <div class="body">
+            <div class="sub">Operators</div>
+            <div class="chips" id="ops-binary">
+              <label class="chip"><input type="checkbox" value="+" checked /><span>+</span></label>
+              <label class="chip"><input type="checkbox" value="-" checked /><span>−</span></label>
+              <label class="chip"><input type="checkbox" value="*" checked /><span>×</span></label>
+              <label class="chip"><input type="checkbox" value="/" checked /><span>÷</span></label>
+            </div>
+            <div class="chips" id="ops-unary">
+              <label class="chip"><input type="checkbox" value="sin" checked /><span>sin</span></label>
+              <label class="chip"><input type="checkbox" value="cos" checked /><span>cos</span></label>
+              <label class="chip"><input type="checkbox" value="sqrt" checked /><span>sqrt</span></label>
+              <label class="chip"><input type="checkbox" value="square" checked /><span>x²</span></label>
+              <label class="chip"><input type="checkbox" value="exp" /><span>exp</span></label>
+              <label class="chip"><input type="checkbox" value="log" /><span>log</span></label>
+              <label class="chip"><input type="checkbox" value="abs" /><span>abs</span></label>
+            </div>
+            <label class="field">
+              <span>Max complexity</span><output id="out-maxsize"></output>
+              <input type="range" id="in-maxsize" min="7" max="40" step="1" value="20" />
+            </label>
+            <label class="field">
+              <span>Iterations per region</span><output id="out-iters"></output>
+              <input type="range" id="in-iters" min="5" max="300" step="5" value="60" />
+            </label>
+            <label class="field">
+              <span>Converged when error &lt; (% of region size)</span><output id="out-conv"></output>
+              <input type="range" id="in-conv" min="0.05" max="3" step="0.05" value="0.4" />
+            </label>
+            <label class="field">
+              <span>Training points per region</span><output id="out-trainpts"></output>
+              <input type="range" id="in-trainpts" min="200" max="4000" step="100" value="600" />
+            </label>
+            <label class="field">
+              <span>Populations</span><output id="out-pops"></output>
+              <input type="range" id="in-pops" min="4" max="64" step="1" value="15" />
+            </label>
+            <div class="seg" role="radiogroup" aria-label="Which regions">
+              <label><input type="radio" name="scope" value="all" checked /><span>All regions</span></label>
+              <label><input type="radio" name="scope" value="selected" /><span>Selected region</span></label>
+            </div>
+            <div class="row">
+              <button id="btn-discover" class="btn primary grow">Run discovery</button>
+              <button id="btn-skip" class="btn" disabled title="Finish the current region and move on">Skip</button>
+              <button id="btn-stop" class="btn danger" disabled>Stop</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" data-step="cad">
+          <header><span class="num">5</span><h2>CAD export</h2><span class="tick" aria-hidden="true"></span></header>
+          <div class="body">
+            <div class="chips" id="export-formats">
+              <label class="chip"><input type="checkbox" value="step" checked /><span>STEP</span></label>
+              <label class="chip"><input type="checkbox" value="stl" checked /><span>STL</span></label>
+              <label class="chip"><input type="checkbox" value="json" checked /><span>Equations JSON</span></label>
+            </div>
+            <label class="field inline">
+              <span>Model units</span>
+              <select id="in-units">
+                <option value="mm" selected>millimetres</option>
+                <option value="cm">centimetres</option>
+                <option value="m">metres</option>
+                <option value="inch">inches</option>
+              </select>
+            </label>
+            <button id="btn-export" class="btn primary wide">Export…</button>
+            <ul class="files" id="export-files"></ul>
+          </div>
+        </section>
+      </aside>
+
+      <main class="viewport">
+        <div id="viewer"></div>
+        <div class="vp-toolbar">
+          <div class="seg small" id="layers">
+            <label><input type="checkbox" value="mesh" checked /><span>Mesh</span></label>
+            <label><input type="checkbox" value="points" checked /><span>Points</span></label>
+            <label><input type="checkbox" value="surfaces" checked /><span>Surfaces</span></label>
+          </div>
+          <div class="seg small" id="colormode" role="radiogroup" aria-label="Colour points by">
+            <label><input type="radio" name="cm" value="region" checked /><span>Regions</span></label>
+            <label><input type="radio" name="cm" value="residual" /><span>Fit error</span></label>
+            <label><input type="radio" name="cm" value="normal" /><span>Normals</span></label>
+          </div>
+          <button class="btn small" id="btn-fit" title="Fit view">Fit view</button>
+        </div>
+        <div class="vp-legend" id="vp-legend" hidden>
+          <div class="lg-title">Signed fit error</div>
+          <div class="lg-bar"></div>
+          <div class="lg-ticks"><span id="lg-min"></span><span>0</span><span id="lg-max"></span></div>
+          <div class="lg-note">blue: surface below points · red: above</div>
+        </div>
+        <div class="vp-empty" id="vp-empty">
+          <div class="vp-empty-title">Open a mesh to begin</div>
+          <div class="vp-empty-sub">mesh → dense point cloud → surface regions → symbolic regression → CAD</div>
+        </div>
+        <div class="vp-progress" id="vp-progress" hidden>
+          <span id="vp-progress-text"></span>
+          <div class="bar"><div id="vp-progress-bar"></div></div>
+        </div>
+        <div class="toasts" id="toasts"></div>
+      </main>
+
+      <aside class="right panel">
+        <section class="regions-panel">
+          <header class="ph"><h2>Regions</h2><span class="muted" id="regions-count"></span></header>
+          <div class="region-list" id="region-list"><div class="empty">No regions yet</div></div>
+        </section>
+        <section class="monitor" id="monitor">
+          <header class="ph">
+            <h2 id="mon-title">Training monitor</h2>
+            <span class="muted" id="mon-iter"></span>
+            <div class="spacer"></div>
+            <button class="btn small" id="btn-follow" hidden>Follow active</button>
+          </header>
+          <div class="mon-body">
+            <div class="frame-row">
+              <label class="field inline">
+                <span>Frame</span>
+                <select id="in-frame" disabled>
+                  <option value="auto">auto</option>
+                  <option value="height">height  w = f(u, v)</option>
+                  <option value="cylindrical">cylindrical  r = f(θ, h)</option>
+                  <option value="spherical">spherical  r = f(θ, lat)</option>
+                </select>
+              </label>
+              <span class="badge" id="mon-status"></span>
+            </div>
+            <div class="eq-card">
+              <div class="eq-label">Discovered surface (model units, region frame)</div>
+              <div class="eq" id="eq-world"><span class="muted">—</span></div>
+              <div class="eq-label">Normalised form searched by PySR</div>
+              <div class="eq small" id="eq-norm"><span class="muted">—</span></div>
+              <dl class="eq-meta" id="eq-meta"></dl>
+            </div>
+            <div class="chart-block">
+              <div class="chart-title">Loss per iteration <span class="muted">(mean squared error, normalised)</span></div>
+              <div class="chart" id="chart-loss"></div>
+            </div>
+            <div class="chart-block">
+              <div class="chart-title">Pareto front <span class="muted">· loss vs complexity, click to choose</span></div>
+              <div class="chart" id="chart-pareto"></div>
+            </div>
+            <div class="hof-wrap">
+              <table class="hof" id="hof-table">
+                <thead><tr><th>C</th><th>loss</th><th>equation</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <footer class="logbar" id="logbar">
+        <button class="btn small ghost" id="btn-log" aria-expanded="false">Log</button>
+        <span class="log-last" id="log-last"></span>
+        <pre class="log" id="log"></pre>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
